@@ -8,7 +8,7 @@
 import UIKit
 
 final class Session {
-
+//
     private init() {}
     
     static let user = Session()
