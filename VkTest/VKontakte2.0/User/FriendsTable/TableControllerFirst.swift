@@ -6,37 +6,47 @@
 //
 
 import UIKit
+import SDWebImage
 
-class TableControllerFirst: UITableViewController {
+final class TableControllerFirst: UITableViewController {
     
     @IBOutlet weak var tableViewFriends: UITableView!
-    var friends = UserRepository()
-    var firstCharFriends = [String]()
-    var dictionaryFriends = [String : [UserFriendly]]()
+    
     let headerID = String(describing: HeaderFriends.self)
+    
+    // MARK: API
+    private var friendsAPI = FriendsApiMethods()
+    private var friendsAPIArray: [Friends] = []
+    var firstCharFriendsAPI = [String]()
+    var dictionaryFriendsAPI = [String : [Friends]]()
     
     // MARK: Override func
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        friends.userBlock.sort()
-        uploadFirstCharFriends()
-        uploadKeyDictionaryFriends()
-        uploadValueDictionaryFriends()
-        tableViewConfig()
-        RequestToVK.friendsReguestAlamofire()
         RequestToVK.groupReguestAlamofire()
         RequestToVK.searchGroupReguestAlamofire()
-        RequestToVK.photosSelectedFriendsReguest(friendsId: "156647166")
+        
+        tableViewConfig()
+        friendsAPI.getFriends { [weak self] friendsAPIArray in
+            guard let self = self else { return }
+            
+            self.friendsAPIArray = friendsAPIArray
+            self.uploadFirstCharFriendsAPI()
+            self.uploadKeyDictionaryFriendsAPI()
+            self.uploadValueDictionaryFriendsAPI()
+            self.tableViewFriends.reloadData()
+            
+        }
     }
     
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return firstCharFriends.count
+        return firstCharFriendsAPI.count
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        let describingValue = firstCharFriends[section]
-        let numberRows = dictionaryFriends[describingValue]
+        let describingValue = firstCharFriendsAPI[section]
+        let numberRows = dictionaryFriendsAPI[describingValue]
         return numberRows!.count
     }
     
@@ -47,32 +57,29 @@ class TableControllerFirst: UITableViewController {
         
         // MARK: Link to the dictionary
         
-        let keyLetter = firstCharFriends[indexPath.section]
-        let arrayFriendsRows = dictionaryFriends[keyLetter]
+        let keyLetter = firstCharFriendsAPI[indexPath.section]
+        let arrayFriendsRows = dictionaryFriendsAPI[keyLetter]
         
-        
-    
         // MARK: Name
     
         let friends1 = arrayFriendsRows?[indexPath.row]
-        cell.numberOfItems.text = String(describing: (friends1?.pictureCollection.count)!)
-                cell.cellFriends.text = friends1?.name
+        cell.numberOfItems.text = "0"
+        cell.cellFriends.text = friends1?.firstName
                 if cell.cellFriends.text == "" {
                     cell.cellFriends.text = "имя отсутствует"
                 }
-                
+    
         // MARK: Surname
         
-                cell.cellSurname.text = friends1?.surname
+        cell.cellSurname.text = friends1?.lastName
                 if cell.cellSurname.text == "" {
                     cell.cellSurname.text = "фамилия отсутствует"
                 }
                 cell.photoFriends.layer.cornerRadius = cell.photoFriends.frame.height/2
                 cell.photoFriends.contentMode = .scaleAspectFill
-                cell.photoFriends.image = UIImage(named: (friends1?.imagename.namePhotoUser)!)
-                if UIImage(named: (friends1?.imagename.namePhotoUser)!) == nil {
-                    cell.photoFriends.image = UIImage(named: "PhotoNil")
-                }
+
+        cell.photoFriends.sd_setImage(with: URL.init(string: friends1!.photoMaxOrig), completed: nil)
+        
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(imageTapped(tapGestureRecognizer:)))
         cell.photoFriends.isUserInteractionEnabled = true
         cell.photoFriends.addGestureRecognizer(tapGestureRecognizer)
@@ -100,7 +107,6 @@ class TableControllerFirst: UITableViewController {
         
                 UIView.animate(withDuration: 0.55, animations: {cell.bounds.size = CGSize.init(width: 0, height: cell.bounds.height)})
              
-        
         return cell
     }
     
@@ -114,11 +120,10 @@ class TableControllerFirst: UITableViewController {
             return
         }
         if let newIndex = seguePath.tableView.indexPathForSelectedRow {
-            let indexSegue = seguePath.firstCharFriends[newIndex.section]
-            let indexSection = dictionaryFriends[indexSegue]
+            let indexSegue = seguePath.firstCharFriendsAPI[newIndex.section]
+            let indexSection = dictionaryFriendsAPI[indexSegue]
             let indexPhotoRow = indexSection?[newIndex.row]
-            photoVC.avatarElement = indexPhotoRow
-            photoVC.isLiked = indexPhotoRow?.imagename.isLikedPhoto
+            photoVC.selectUserAPI = indexPhotoRow
         }
     }
     
@@ -129,7 +134,7 @@ class TableControllerFirst: UITableViewController {
             return UIView()
         }
         header.headerFriendsSection.textColor = .gray
-        header.headerFriendsSection.text = firstCharFriends[section]
+        header.headerFriendsSection.text = firstCharFriendsAPI[section]
         header.tintColor = UIColor.black
        
             return header
@@ -139,15 +144,15 @@ class TableControllerFirst: UITableViewController {
             return 40
         }
     
-    // MARK: func for var/let
+    // MARK: API header func
     
-    func uploadFirstCharFriends() {
+    func uploadFirstCharFriendsAPI() {
         var n = 0
-        while n < friends.userBlock.count {
-        let firstCharIndex = friends.userBlock[n].name.index(friends.userBlock[n].name.startIndex, offsetBy: 1)
-        let firstChar = String(friends.userBlock[n].name[..<firstCharIndex])
-            if !firstCharFriends.contains(firstChar) {
-                firstCharFriends.append(firstChar)
+        while n < friendsAPIArray.count {
+            let firstCharIndex = friendsAPIArray[n].firstName.index(friendsAPIArray[n].firstName.startIndex, offsetBy: 1)
+            let firstChar = String(friendsAPIArray[n].firstName[..<firstCharIndex])
+            if !firstCharFriendsAPI.contains(firstChar) {
+                firstCharFriendsAPI.append(firstChar)
                 n += 1
             } else {
             n += 1
@@ -155,20 +160,20 @@ class TableControllerFirst: UITableViewController {
         }
     }
     
-    func uploadKeyDictionaryFriends() {
-        var n = 0
-        while n < firstCharFriends.count {
-            dictionaryFriends[firstCharFriends[n]] = [UserFriendly]()
-            n += 1
-        }
-    }
+    func uploadKeyDictionaryFriendsAPI() {
+           var n = 0
+           while n < firstCharFriendsAPI.count {
+               dictionaryFriendsAPI[firstCharFriendsAPI[n]] = [Friends]()
+               n += 1
+           }
+       }
     
-    func uploadValueDictionaryFriends() {
+    func uploadValueDictionaryFriendsAPI() {
         var n = 0
-        while n < friends.userBlock.count {
-            let firstCharIndex = friends.userBlock[n].name.index(friends.userBlock[n].name.startIndex, offsetBy: 1)
-            let firstChar = String(friends.userBlock[n].name[..<firstCharIndex])
-            dictionaryFriends[firstChar]! += [friends.userBlock[n]]
+        while n < friendsAPIArray.count {
+            let firstCharIndex = friendsAPIArray[n].firstName.index(friendsAPIArray[n].firstName.startIndex, offsetBy: 1)
+            let firstChar = String(friendsAPIArray[n].firstName[..<firstCharIndex])
+            dictionaryFriendsAPI[firstChar]! += [friendsAPIArray[n]]
             n += 1
         }
     }
