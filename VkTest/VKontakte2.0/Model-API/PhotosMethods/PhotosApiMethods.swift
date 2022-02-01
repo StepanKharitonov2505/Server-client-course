@@ -8,6 +8,7 @@
 import Foundation
 import Alamofire
 import SwiftyJSON
+import RealmSwift
 
 final class PhotosApiMethods {
     
@@ -40,10 +41,23 @@ final class PhotosApiMethods {
                 
                 let photos = photosContainer.response.items
                 
+                self.savePhotosData(photos)
+                
                 completion(photos)
             } catch {
                 print(error)
             }
          }
+    }
+    
+    func savePhotosData(_ photos: [Photos]) {
+        do {
+            let realm = try Realm()
+            realm.beginWrite()
+            realm.add(photos)
+            try realm.commitWrite()
+        } catch  {
+            print(error)
+        }
     }
 }

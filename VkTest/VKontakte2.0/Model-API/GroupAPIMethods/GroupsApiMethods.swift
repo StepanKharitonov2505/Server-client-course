@@ -8,6 +8,7 @@
 import Foundation
 import Alamofire
 import SwiftyJSON
+import RealmSwift
 
 final class GroupsApiMethods {
     
@@ -24,7 +25,7 @@ final class GroupsApiMethods {
         let params: [String:String] = [
             "user_id":"\(userId)",
             "order":"name",
-            "count":"100",
+            "count":"80",
             "extended":"1",
             "fields":"photo_max_orig, domain",
             "access_token":accessToken,
@@ -41,10 +42,23 @@ final class GroupsApiMethods {
                 
                 let groups = groupsContainer.response.items
                 
+                self.saveGroupsData(groups)
+                
                 completion(groups)
             } catch {
                 print(error)
             }
          }
+    }
+    
+    func saveGroupsData(_ groups: [Groups]) {
+        do {
+            let realm = try Realm()
+            realm.beginWrite()
+            realm.add(groups)
+            try realm.commitWrite()
+        } catch  {
+            print(error)
+        }
     }
 }

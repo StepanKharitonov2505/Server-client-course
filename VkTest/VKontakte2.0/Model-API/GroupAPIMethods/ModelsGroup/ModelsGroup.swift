@@ -6,8 +6,7 @@
 //
 
 import Foundation
-
-import Foundation
+import RealmSwift
 
 // MARK: - GroupContainer
 class GroupContainer: Codable {
@@ -30,12 +29,11 @@ class GroupResponse: Codable {
 }
 
 // MARK: - Item
-class Groups: Codable {
-    let isMember, id, isAdvertiser, isAdmin: Int
-    let photoMaxOrig: String
-    let type: TypeEnumGroup?
-    let screenName, name: String
-    let isClosed: Int
+class Groups: Object , Codable {
+    @objc dynamic var isMember, id, isAdvertiser, isAdmin: Int
+    @objc dynamic var photoMaxOrig: String
+    @objc dynamic var screenName, name: String
+    @objc dynamic var isClosed: Int
 
     enum CodingKeys: String, CodingKey {
         case isMember = "is_member"
@@ -43,7 +41,6 @@ class Groups: Codable {
         case isAdvertiser = "is_advertiser"
         case isAdmin = "is_admin"
         case photoMaxOrig = "photo_max_orig"
-        case type
         case screenName = "screen_name"
         case name
         case isClosed = "is_closed"
@@ -55,7 +52,6 @@ class Groups: Codable {
         self.isAdvertiser = isAdvertiser
         self.isAdmin = isAdmin
         self.photoMaxOrig = photoMaxOrig
-        self.type = type
         self.screenName = screenName
         self.name = name
         self.isClosed = isClosed

@@ -8,6 +8,7 @@
 import Foundation
 import Alamofire
 import SwiftyJSON
+import RealmSwift
 
 final class FriendsApiMethods {
     
@@ -40,10 +41,24 @@ final class FriendsApiMethods {
                 
                 let friends = friendsContainer.response.items
                 
+                self.saveFriendsData(friends)
+                
                 completion(friends)
             } catch {
                 print(error)
             }
          }
+    }
+    
+    func saveFriendsData(_ friends: [Friends]) {
+        do {
+            let realm = try Realm()
+            realm.beginWrite()
+            realm.add(friends)
+            try realm.commitWrite()
+        } catch  {
+            print(error)
+        }
+        
     }
 }

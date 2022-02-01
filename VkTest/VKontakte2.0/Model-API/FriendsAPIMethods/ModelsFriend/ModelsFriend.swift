@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import RealmSwift
 
 // MARK: - Welcome
 class FriendContainer: Codable {
@@ -28,37 +29,31 @@ class FriendsResponse: Codable {
 }
 
 // MARK: - Item
-class Friends: Codable {
-    let canAccessClosed: Bool?
-    let id: Int
-    let photoMaxOrig: String
-    let lastName: String
-    let lists: [Int]?
-    let trackCode: String
-    let isClosed: Bool?
-    let firstName: String
-    let deactivated: String?
+class Friends: Object , Codable {
+    @objc dynamic var id: Int
+    @objc dynamic var photoMaxOrig: String
+    @objc dynamic var lastName: String
+    @objc dynamic var lists: [Int]?
+    @objc dynamic var trackCode: String
+    @objc dynamic var firstName: String
+    @objc dynamic var deactivated: String?
 
     enum CodingKeys: String, CodingKey {
-        case canAccessClosed = "can_access_closed"
         case id
         case photoMaxOrig = "photo_max_orig"
         case lastName = "last_name"
         case lists
         case trackCode = "track_code"
-        case isClosed = "is_closed"
         case firstName = "first_name"
         case deactivated
     }
 
-    init(canAccessClosed: Bool?, id: Int, photoMaxOrig: String, lastName: String, lists: [Int]?, trackCode: String, isClosed: Bool?, firstName: String, deactivated: String?) {
-        self.canAccessClosed = canAccessClosed
+    init(id: Int, photoMaxOrig: String, lastName: String, lists: [Int]?, trackCode: String,firstName: String, deactivated: String?) {
         self.id = id
         self.photoMaxOrig = photoMaxOrig
         self.lastName = lastName
         self.lists = lists
         self.trackCode = trackCode
-        self.isClosed = isClosed
         self.firstName = firstName
         self.deactivated = deactivated
     }

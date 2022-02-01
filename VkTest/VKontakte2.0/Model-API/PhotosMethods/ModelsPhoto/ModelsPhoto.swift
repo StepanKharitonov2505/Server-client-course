@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import RealmSwift
 
 // MARK: - PhotoContainer
 class PhotoContainer: Codable {
@@ -28,13 +29,13 @@ class PhotoResponse: Codable {
 }
 
 // MARK: - Item
-class Photos: Codable {
-    let albumID, id, date: Int
-    let text: String
-    let sizes: [Size]
-    let hasTags: Bool
-    let ownerID: Int
-    let postID: Int?
+class Photos: Object , Codable {
+    @objc dynamic var albumID, id, date: Int
+    @objc dynamic var text: String
+                  let sizes: [Size]
+    @objc dynamic var hasTags: Bool
+    @objc dynamic var ownerID: Int
+                  let postID: Int?
 
     enum CodingKeys: String, CodingKey {
         case albumID = "album_id"
