@@ -7,6 +7,7 @@
 
 import Foundation
 import Alamofire
+import SwiftyJSON
 import RealmSwift
 
 final class FriendsApiMethods {
@@ -16,7 +17,7 @@ final class FriendsApiMethods {
     let accessToken = Session.user.token
     let version = "5.131"
     
-    func getFriends(completion: @escaping([Friends])->()) {
+    func getFriends(completion: @escaping() -> Void ) {
         
         let path = "/friends.get"
         let url = baseUrl + path
@@ -36,24 +37,31 @@ final class FriendsApiMethods {
             guard let jsonData = response.data else { return }
             
             do {
-                let friendsContainer = try JSONDecoder().decode(FriendContainer.self, from: jsonData)
+                let friendsContainer: Any = try JSONSerialization.jsonObject(with: jsonData, options: .mutableContainers)
                 
-                let friends = friendsContainer.response.items
+                let container = friendsContainer as! [String: Any]
+                let response = container["response"] as! [String: Any]
+                let items = response["items"] as! [Any]
+                
+                let friends = items.map { ModelFriendsManual(item: $0 as! [String: Any]) }
                 
                 self.saveFriendsData(friends)
                 
-                completion(friends)
+                completion()
             } catch {
                 print(error)
             }
          }
     }
     
-    func saveFriendsData(_ friends: [Friends]) {
+    func saveFriendsData(_ friends: [ModelFriendsManual]) {
             do {
+                
+                Realm.Configuration.defaultConfiguration = Realm.Configuration(deleteRealmIfMigrationNeeded: true)
                 let realm = try Realm()
+                print(realm.configuration.fileURL)
                 realm.beginWrite()
-                realm.add(friends)
+                realm.add(friends, update: .modified)
                 try realm.commitWrite()
             } catch {
                 print(error)
