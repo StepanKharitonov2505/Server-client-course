@@ -16,7 +16,7 @@ final class GroupsApiMethods {
     let accessToken = Session.user.token
     let version = "5.131"
     
-    func getGroups(completion: @escaping([Groups])->()) {
+    func getGroups(completion: @escaping()-> Void) {
         
         let path = "/groups.get"
         let url = baseUrl + path
@@ -37,24 +37,29 @@ final class GroupsApiMethods {
             guard let jsonData = response.data else { return }
             
             do {
-                let groupsContainer = try JSONDecoder().decode(GroupContainer.self, from: jsonData)
+              
+                let groupsContainer: Any = try JSONSerialization.jsonObject(with: jsonData, options: .mutableContainers)
                 
-                let groups = groupsContainer.response.items
+                let container = groupsContainer as! [String: Any]
+                let response = container["response"] as! [String: Any]
+                let items = response["items"] as! [Any]
+                
+                let groups = items.map { ModelGroupsManual(item: $0 as! [String: Any])}
                 
                 self.saveGroupsData(groups)
                 
-                completion(groups)
+                completion()
             } catch {
                 print(error)
             }
          }
     }
     
-    func saveGroupsData(_ groups: [Groups]) {
+    func saveGroupsData(_ groups: [ModelGroupsManual]) {
             do {
                 let realm = try Realm()
                 realm.beginWrite()
-                realm.add(groups)
+                realm.add(groups, update: .modified)
                 try realm.commitWrite()
             } catch {
                 print(error)
